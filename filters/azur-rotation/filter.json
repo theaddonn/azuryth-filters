@@ -3,8 +3,8 @@
 
     "filters": [
         {
-            "runWith": "nodejs",
-            "script": "./main.js"
+            "runWith": "deno",
+            "script": "./main.ts"
         }
     ]
 }
