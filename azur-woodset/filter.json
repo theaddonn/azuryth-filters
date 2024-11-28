@@ -1,0 +1,10 @@
+{
+    "description": "Generates entire woodsets.",
+
+    "filters": [
+        {
+            "runWith": "nodejs",
+            "script": "./main.js"
+        }
+    ]
+}

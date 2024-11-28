@@ -1,0 +1,10 @@
+{
+    "description": "Generates permutations for rotations.",
+
+    "filters": [
+        {
+            "runWith": "nodejs",
+            "script": "./main.js"
+        }
+    ]
+}
