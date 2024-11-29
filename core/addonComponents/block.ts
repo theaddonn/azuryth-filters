@@ -21,7 +21,7 @@ export class Permutation {
         return new Permutation(condition, new ComponentStore(components));
     }
 
-    static fromObject(condition: string, permComponents: JsonObject) {
+    static fromObject(condition: string, permComponents: JsonObject): Permutation {
         const components: Map<string, JsonValue> = new Map();
         for (const [key, info] of Object.entries(permComponents)) {
             components.set(key, info as JsonValue);
@@ -110,7 +110,7 @@ export class Block {
         }
     }
 
-    hasCustomComponent() {
+    hasCustomComponent(): boolean {
         for (const [key, _] of this.components.entries()) {
             if (!key.startsWith("minecraft:")) {
                 return true;

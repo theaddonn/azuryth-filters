@@ -17,7 +17,7 @@ export class ComponentStore<T> {
   }
 
 
-  hasComponent(key: string) {
+  hasComponent(key: string): boolean {
     return this.components.has(key);
   }
 
@@ -37,7 +37,7 @@ export class ComponentStore<T> {
     return this.components.entries();
   }
 
-  count() {
+  count(): number {
     return this.components.size
   }
 
