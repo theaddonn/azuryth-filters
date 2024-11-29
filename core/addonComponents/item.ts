@@ -1,36 +1,63 @@
-import type { JsonObject, JsonValue } from "./types.ts";
+import { getOrThrow } from "../util/json.ts";
+import { ComponentStore, type JsonObject, type JsonValue } from "./types.ts";
 
 
 
 export class Item {
-    private components: Map<string, JsonValue>;
+    components: ComponentStore<JsonValue>;
     id: string;
-    constructor(id: string) {
-        this.components = new Map();
-        this.id = id;
-    }
+    private description: JsonObject;
+    private formatString: string;
+    constructor(json: JsonObject) {
+        const format = getOrThrow<string>("format_version", json)!;
+        const item = getOrThrow<JsonObject>("minecraft:item", json)!;
+        const description = getOrThrow<JsonObject>("description", item)!;
+        const id = getOrThrow<string>("identifier", description)!;
 
-    static fromJson(json: JsonObject): Item | undefined {
-        try {
-            if (json === null) {
-                throw new Error("Null json passed");
-            }
-            const itemInfo = json["minecraft:item"] as JsonObject;
-            const item = new Item(itemInfo["description"] as JsonObject ["identifier"] as string);
-            return item;
-        } catch (err){
-            console.error(err);
+        const components: Map<string, JsonValue> = new Map();
+        const itemComponents = getOrThrow<JsonObject>("components", item)!;
+        for (const [key, val] of Object.entries(itemComponents)) {
+            components.set(key, val);
         }
 
-
+        this.id = id;
+        this.components = new ComponentStore(components);
+        this.description = description;
+        this.formatString = format;
     }
 
-    hasComponent(id: string): boolean {
-        return id in this.components
+
+    *getCustomComponentsRoot(): IterableIterator<[string, JsonValue]> {
+        for (const [key, info] of this.components.entries()) {
+            if (key.startsWith("minecraft:")) {
+                continue;
+            }
+            yield [key, info];
+        }
     }
 
-    setComponent(id: string, data: JsonValue): Item {
-        this.components.set(id, data);
-        return this;
+    hasCustomComponent(): boolean {
+        for (const [key, _] of this.components.entries()) {
+            if (!key.startsWith("minecraft:")) {
+                return true;
+            }
+        }
+        return false
+    }
+
+    jsonBlob(): JsonObject {
+        const components = this.components.jsonBlob();
+        const description = this.description;
+        description["identifer"] = this.id;
+
+        const json: JsonObject = {};
+        json["format_version"] = this.formatString;
+
+        const info: JsonObject = {};
+        info["components"]  = components;
+        info["description"] = description;
+
+        json["minecraft:item"] = info;
+        return info
     }
 }

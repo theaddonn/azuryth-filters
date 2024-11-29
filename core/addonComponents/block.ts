@@ -110,10 +110,29 @@ export class Block {
         }
     }
 
+    *getCustomComponentsPermutation(): IterableIterator<[string, JsonValue, ComponentStore<JsonValue>]> {
+        for (const perm of this.permutations) {
+            for (const [key, info] of perm.components.entries()) {
+                if (key.startsWith("minecraft:")) {
+                    continue;
+                }
+                yield [key, info, perm.components]
+            }
+        }
+    }
+
+
     hasCustomComponent(): boolean {
         for (const [key, _] of this.components.entries()) {
             if (!key.startsWith("minecraft:")) {
                 return true;
+            }
+        }
+        for (const perm of this.permutations) {
+            for (const [key, _] of perm.components.entries()) {
+                if (!key.startsWith("minecraft:")) {
+                    return true;
+                }
             }
         }
         return false;
