@@ -1,20 +1,15 @@
 import type { Item } from "./addonComponents/item.ts";
-import { walk, walkSync } from "@std/fs/walk"
+import { walkSync } from "@std/fs/walk"
 import { existsSync } from "@std/fs/exists"
 import type { ComponentStore, JsonObject, JsonValue } from "./addonComponents/types.ts";
 import { Block } from "./addonComponents/block.ts";
+import { BlockComponent } from "./component.ts";
 
 export class PathInformation {
     resourcePath: string;
     behaviourPath: string;
 
     constructor(behaviourPath: string, resourcePath: string) {
-        if (!behaviourPath.endsWith("\\")) {
-            behaviourPath = behaviourPath.concat("\\");
-        }
-        if (!resourcePath.endsWith("\\")) {
-            resourcePath = resourcePath.concat("\\");
-        }
         behaviourPath = Deno.realPathSync(behaviourPath);
         resourcePath = Deno.realPathSync(resourcePath);
         if (!behaviourPath.endsWith("\\")) {
@@ -31,7 +26,7 @@ export class PathInformation {
 
 export class AddonProcessor {
     private customItemComponents: Map<string, ((item: Item) => void)>;
-    private customBlockComponents: Map<string, ((block: Block, info: JsonValue, localJsonContext: ComponentStore<JsonValue>, isPermutation: boolean) => void)>;
+    private customBlockComponents: Map<string, BlockComponent>;
 
     private blocks: Map<string, [Block, string]>;
 
@@ -41,11 +36,7 @@ export class AddonProcessor {
         this.blocks = new Map();
     }
 
-    addItemComponent(id: string, callback: (item: Item) => void) {
-        this.customItemComponents.set(id, callback);
-    }
-
-    addBlockComponent(id: string, callback: (block: Block, info: JsonValue, localJsonContext: ComponentStore<JsonValue>, isPermutation: boolean) => void) {
+    addBlockComponent(id: string, callback: BlockComponent) {
         this.customBlockComponents.set(id, callback);
     }
 
@@ -86,14 +77,14 @@ export class AddonProcessor {
     private handleBlocks(warnBoundComponent: boolean = false) {
         for (const [_, [block, _path]] of this.blocks) {
             for (const [id, info, context] of block.getCustomComponentsRoot()) {
-                const fn = this.customBlockComponents.get(id);
-                if (!fn) {
+                const component = this.customBlockComponents.get(id);
+                if (!component) {
                     if (warnBoundComponent) {
                         console.warn(`Component ${id} doesn't have a component bound!`);
                     }
                     continue;
                 }
-                fn(block, info, context, false);
+                component.generate(block, info, context, false);
                 block.components.removeComponent(id);
             }
         }
