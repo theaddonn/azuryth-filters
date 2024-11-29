@@ -3,7 +3,7 @@
       "dev": "deno run --watch main.ts"
     },
     "imports": {
-      "@azuryth/azuryth-core": "jsr:@azuryth/azuryth-core@^0.2.0"
+      "@azuryth/azuryth-core": "jsr:@azuryth/azuryth-core@^0.4.0"
     },
     "name": "@azuryth/azuryth-rotations",
     "version": "0.2.0",

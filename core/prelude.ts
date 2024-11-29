@@ -1,9 +1,17 @@
 import type { Item } from "./addonComponents/item.ts";
 import { walkSync } from "@std/fs/walk"
 import { existsSync } from "@std/fs/exists"
-import type { ComponentStore, JsonObject, JsonValue } from "./addonComponents/types.ts";
+import type { JsonObject} from "./addonComponents/types.ts";
 import { Block } from "./addonComponents/block.ts";
-import { BlockComponent } from "./component.ts";
+import type { BlockComponent } from "./component.ts";
+
+
+export * from "./component.ts";
+export * from "./addonComponents/block.ts";
+export * from "./addonComponents/item.ts";
+export * from "./addonComponents/types.ts";
+export * from "./util/json.ts";
+
 
 export class PathInformation {
     resourcePath: string;
