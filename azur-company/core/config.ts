@@ -31,8 +31,8 @@ export function gatherComponentInformation(): [
     for (const info of information) {
         const componentClass = getOrThrow<string>("class", info)!;
         const componentId = getOrThrow<string>("componentId", info)!;
-        const path = getOrUndefined<string>("path", rawConfig);
-        const type = getOrThrow<ComponentType>("type", rawConfig)!;
+        const path = getOrUndefined<string>("path", info);
+        const type = getOrThrow<ComponentType>("type", info)!;
         informationArray.push({
             class: componentClass,
             componentId: componentId,
