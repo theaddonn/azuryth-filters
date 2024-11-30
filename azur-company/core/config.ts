@@ -2,7 +2,6 @@ import {
     getOrThrow,
     getOrUndefined,
     JsonObject,
-    JsonValue,
 } from "@azuryth/azuryth-core";
 
 export enum ComponentType {
