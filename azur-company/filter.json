@@ -1,0 +1,10 @@
+{
+    "description": "Generates components for easy custom components.",
+
+    "filters": [
+        {
+            "runWith": "deno",
+            "script": "./main.ts"
+        }
+    ]
+}

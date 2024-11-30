@@ -6,7 +6,7 @@ import {
     type Block,
     Permutation,
     getOrUndefined,
-    JsonObject,
+    type JsonObject,
 } from "@azuryth/azuryth-core";
 
 const info = new PathInformation("BP", "RP");

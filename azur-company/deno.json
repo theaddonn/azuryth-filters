@@ -1,0 +1,9 @@
+{
+  "tasks": {
+    "dev": "deno run --watch main.ts"
+  },
+  "imports": {
+    "@azuryth/azuryth-core": "jsr:@azuryth/azuryth-core@^0.5.2",
+    "@std/assert": "jsr:@std/assert@1"
+  }
+}

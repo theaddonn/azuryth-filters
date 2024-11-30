@@ -33,6 +33,14 @@ export class ComponentStore<T> {
     return this.components.get(key);
   }
 
+  getComponentOrDefault<R>(key: string, defaultValue: R): R {
+    const comp = this.getComponent(key);
+    if (comp !== undefined) {
+      return comp as R;
+    }
+    return defaultValue;
+  }
+
   entries(): IterableIterator<[string, T]> {
     return this.components.entries();
   }

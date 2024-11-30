@@ -8,5 +8,5 @@ export interface BlockComponent {
 }
 
 export interface ItemComponent {
-    generate: ((item: Item, info: JsonValue) => void);
+    generate: ((item: Item, info: JsonValue, localJsonContext: ComponentStore<JsonValue>) => void);
 }

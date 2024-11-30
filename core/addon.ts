@@ -134,7 +134,7 @@ export class AddonProcessor {
                 if (!component) {
                     continue;
                 }
-                component.generate(item, info);
+                component.generate(item, info, item.components);
                 item.components.removeComponent(id);
             }
         }

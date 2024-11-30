@@ -7,7 +7,7 @@
     "@std/fs": "jsr:@std/fs@^1.0.6"
   },
   "name": "@azuryth/azuryth-core",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "license": "MIT",
   "exports": "./prelude.ts"
 }

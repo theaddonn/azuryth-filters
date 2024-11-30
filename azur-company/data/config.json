@@ -1,0 +1,20 @@
+{
+    "heterogeneousJs": true,
+    "componentList": [
+        {
+            "class": "Throwable",
+            "componentId": "azur:dynamite",
+            "type": "item"
+        }
+        /*
+            If this wasnt a heterogeneousJs it would look like 
+        {
+            "class": "Throwable",
+            "componentId": "azur:dynamite",
+            "path": "components/item/throwable.ts",
+            "type": "item"
+        }
+        */
+    ],
+    "mainJs": "main.js"
+}
