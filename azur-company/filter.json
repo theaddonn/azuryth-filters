@@ -4,7 +4,8 @@
     "filters": [
         {
             "runWith": "deno",
-            "script": "./main.ts"
+            "script": "./main.ts",
+            "version": "0.1.0"
         }
     ]
 }
