@@ -151,7 +151,6 @@ function addRegisterCall(filterSettings: FilterSettings, project: Project) {
     console.warn("No dedicated emmition specified (add // azur_company(emit) to a line in your main file to tell Azur-Company where to emit)");
     mainFile.addStatements(writer);
 
-    console.log(mainFile.print())
 
     
 }
