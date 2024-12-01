@@ -7,6 +7,7 @@ import {
     Permutation,
     getOrUndefined,
     type JsonObject,
+    ParserEnabled,
 } from "@azuryth/azuryth-core";
 
 const info = new PathInformation("BP", "RP");
@@ -99,7 +100,7 @@ const processor = new AddonProcessor();
 processor.addBlockComponent("azur:rotation", new Rotation());
 
 try {
-    processor.parseAddon(info);
+    processor.parseAddon(info, new ParserEnabled(false));
     processor.processAddon();
     processor.saveAddon();
 } catch (err) {

@@ -1,4 +1,4 @@
-import { BlockComponent, JsonValue, ComponentStore, Block, ItemComponent, Item, AddonProcessor, getOrThrow, PathInformation } from "@azuryth/azuryth-core";
+import { BlockComponent, JsonValue, ComponentStore, Block, ItemComponent, Item, AddonProcessor, getOrThrow, PathInformation, ParserEnabled } from "@azuryth/azuryth-core";
 import { getSettings } from "./core/cli.ts";
 import { ComponentGenerator } from "./core/componentGenerator.ts";
 import { ComponentType, gatherComponentInformation } from "./core/config.ts";
@@ -49,7 +49,7 @@ for (const info of information) {
 
 const path = new PathInformation("BP", "RP");
 
-addon.parseAddon(path);
+addon.parseAddon(path, new ParserEnabled(true, true));
 addon.processAddon();
 try {
   ensureDirSync(base)
