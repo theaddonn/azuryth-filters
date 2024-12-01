@@ -84,7 +84,6 @@ export class ComponentGenerator {
         });
         this.emitFunctionBody(func);
 
-        console.log(file.print());
     }
 
     private emitIncludes(file: SourceFile) {

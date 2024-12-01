@@ -27,7 +27,8 @@ export function findCloseIndex(str: string, information: SearchFilter): number {
 export function searchWithScopes(str: string, filter: string, filters: SearchFilter[]): number {
     let depth = 1;
     let index = 0;
-    while (index !== str.length) {
+    const oldLen = str.length;
+    while (index !== oldLen && str.length !== 0) {
         if (depth === 1 && str.startsWith(filter)) {
             return index;
         }
