@@ -49,7 +49,7 @@ export class Item {
     jsonBlob(): JsonObject {
         const components = this.components.jsonBlob();
         const description = this.description;
-        description["identifer"] = this.id;
+        description["identifier"] = this.id;
 
         const json: JsonObject = {};
         json["format_version"] = this.formatString;

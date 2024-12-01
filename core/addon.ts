@@ -23,6 +23,17 @@ export class PathInformation {
     }
 }
 
+export class ParserEnabled {
+    blocks: boolean = true;
+    items: boolean = true;
+
+
+    constructor(items: boolean = true, blocks: boolean = true) {
+        this.blocks = blocks;
+        this.items = items;
+    }
+}
+
 
 export class AddonProcessor {
     private customItemComponents: Map<string, ItemComponent>;
@@ -46,13 +57,13 @@ export class AddonProcessor {
         this.customItemComponents.set(id, callback);
     }
 
-    parseAddon(path: PathInformation) {
-        if (existsSync(path.behaviourPath + "blocks")) {
+    parseAddon(path: PathInformation, enabled: ParserEnabled = new ParserEnabled()) {
+        if (enabled.blocks && existsSync(path.behaviourPath + "blocks")) {
             console.log("Found blocks. Parsing...");
             this.parseBlocks(path.behaviourPath + "blocks")
         }
 
-        if (existsSync(path.behaviourPath + "items")) {
+        if (enabled.items && existsSync(path.behaviourPath + "items")) {
             console.log("Found items. Parsing...");
             this.parseItems(path.behaviourPath + "items")
         }
