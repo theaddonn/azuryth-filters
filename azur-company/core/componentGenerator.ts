@@ -54,7 +54,9 @@ export class ComponentGenerator {
     generateRegisterPass(requireComponentImports: boolean): string {
         let mainString = "";
         if (requireComponentImports) {
-            mainString += this.buildImports();
+            mainString += this.buildImportsExternal();
+        } else {
+            mainString += this.buildImportsInternal();
         }
 
         mainString += `
@@ -85,7 +87,7 @@ export class ComponentGenerator {
         return mainString;
     }
 
-    private buildImports(): string {
+    private buildImportsExternal(): string {
         let returnInfo = "";
         for (const [_id, info] of this.blockComponentInformation) {
             if (info.path === undefined) {
@@ -102,5 +104,25 @@ export class ComponentGenerator {
             `
         }
         return returnInfo;
+    }
+
+    private buildImportsInternal(): string {
+        let returnInfo = "";
+        
+        for (const [_id, info] of this.blockComponentInformation) {
+            if (info.path === undefined) {
+                continue;
+            }
+            returnInfo += `import { ${info.class} } from "./main";
+            `
+        }
+        for (const [_id, info] of this.itemComponentInformation) {
+            if (info.path === undefined) {
+                continue;
+            }
+            returnInfo += `import { ${info.class} } from "./main";
+            `
+        }
+        return returnInfo; 
     }
 }
