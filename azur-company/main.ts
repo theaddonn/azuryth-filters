@@ -80,7 +80,6 @@ if (offsets) {
   main += registerJS
 }
 main += `
-import {createBinder} from "./register.js";
 createBinder();
 `
 
