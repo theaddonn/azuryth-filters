@@ -1,23 +1,32 @@
 import type { JsonValue } from "@azuryth/azuryth-core";
-import { ComponentInformation, ComponentType } from "./config.ts";
-
-
+import { ComponentInformation, ComponentType } from "./componentPuller.ts";
+import { FunctionDeclaration, Project, SourceFile } from "@ts-morph/ts-morph";
 
 export class ComponentGenerator {
-    private id: number;
-    private blockComponentInformation: Map<string, ComponentInformation> 
-    private itemComponentInformation: Map<string, ComponentInformation> 
-    private blockComponentInstances: Array<{id: number, info: JsonValue, baseId: string, componentInfo: ComponentInformation}>;
-    private itemComponentInstances: Array<{id: number, info: JsonValue, baseId: string, componentInfo: ComponentInformation}>;
+    private indexId: number;
+    private blockComponentInformation: Map<string, ComponentInformation>;
+    private itemComponentInformation: Map<string, ComponentInformation>;
+    private blockComponentInstances: Array<{
+        indexId: number;
+        info: JsonValue;
+        baseId: string;
+        componentInfo: ComponentInformation;
+    }>;
+    private itemComponentInstances: Array<{
+        indexId: number;
+        info: JsonValue;
+        baseId: string;
+        componentInfo: ComponentInformation;
+    }>;
+    private project: Project;
 
-
-    constructor(information: ComponentInformation[]) {
-        this.id = 0;
+    constructor(information: ComponentInformation[], proj: Project) {
+        this.indexId = 0;
         this.blockComponentInformation = new Map();
         this.itemComponentInformation = new Map();
         this.blockComponentInstances = [];
         this.itemComponentInstances = [];
-
+        this.project = proj;
 
         for (const info of information) {
             if (info.type === ComponentType.Item) {
@@ -28,8 +37,11 @@ export class ComponentGenerator {
         }
     }
 
-
-    addComponentReference(id: string, info: JsonValue, item: boolean): string | undefined {
+    addComponentReference(
+        id: string,
+        info: JsonValue,
+        item: boolean
+    ): string | undefined {
         if (item) {
             if (!this.itemComponentInformation.has(id)) {
                 return;
@@ -41,70 +53,93 @@ export class ComponentGenerator {
         }
         if (item) {
             const customInfo = this.itemComponentInformation.get(id)!;
-            this.itemComponentInstances.push({id: this.id, info: info, baseId: id, componentInfo: customInfo});
+            this.itemComponentInstances.push({
+                indexId: this.indexId,
+                info: info,
+                baseId: id,
+                componentInfo: customInfo,
+            });
         } else {
             const customInfo = this.blockComponentInformation.get(id)!;
-            this.blockComponentInstances.push({id: this.id, info: info, baseId: id, componentInfo: customInfo});
+            this.blockComponentInstances.push({
+                indexId: this.indexId,
+                info: info,
+                baseId: id,
+                componentInfo: customInfo,
+            });
         }
-        this.id += 1;
-        return `${id}_${this.id - 1}`;
+        this.indexId += 1;
+        return `${id}_${this.indexId - 1}`;
     }
 
+    generateSource(basePath: string) {
+        const file = this.project.createSourceFile(
+            basePath + "/azur_company_register.ts"
+        );
+        this.emitIncludes(file);
+        const func = file.addFunction({
+            name: "registerGeneratedComponentsFromAzurCompany",
+            parameters: [{ name: "event" }],
+            isExported: true
+        });
+        this.emitFunctionBody(func);
 
-    generateRegisterPass(requireComponentImports: boolean, needsWorld: boolean): string {
-        let mainString = "";
-        if (requireComponentImports) {
-            console.log("Building External Imports");
-            mainString += this.buildImportsExternal();
-        }
-        if (needsWorld) {
-            mainString += `import {world} from "@minecraft/server";`;
-        }
-
-        mainString += `
-
-        function bindCustomComponents(event) {
-        `;
-        for (const {id, info, baseId, componentInfo} of this.blockComponentInstances) {
-            mainString += `event.blockComponentRegistry.registerCustomComponent(
-                "${baseId}_${id}",
-                new ${componentInfo.class}(${JSON.stringify(info)})
-            );
-            `
-        }
-        for (const {id, info, baseId, componentInfo} of this.itemComponentInstances) {
-            mainString += `event.itemComponentRegistry.registerCustomComponent(
-                "${baseId}_${id}",
-                new ${componentInfo.class}(${JSON.stringify(info)})
-            );
-            `
-        }
-        mainString += `}
-
-
-        export function createBinder() {
-            world.beforeEvents.worldInitialize.subscribe((event) => {bindCustomComponents(event)});
-        }`
-        return mainString;
+        console.log(file.print());
     }
 
-    private buildImportsExternal(): string {
-        let returnInfo = "";
-        for (const [_id, info] of this.blockComponentInformation) {
-            if (info.path === undefined) {
-                continue;
+    private emitIncludes(file: SourceFile) {
+        const uniqueIncludes: Set<ComponentInformation> = new Set();
+        for (const block of this.blockComponentInstances) {
+            uniqueIncludes.add(block.componentInfo);
+        }
+        for (const item of this.itemComponentInstances) {
+            uniqueIncludes.add(item.componentInfo);
+        }
+
+        for (const info of uniqueIncludes) {
+            file.addImportDeclaration({
+                namedImports: [{ name: info.class }],
+                moduleSpecifier: info.path,
+            });
+        }
+    }
+
+    private emitFunctionBody(func: FunctionDeclaration) {
+        const emitCaller = (
+            info: ComponentInformation,
+            jsonParam: JsonValue
+        ) => {
+            if (info.overrideFunc) {
+                return `${info.class}.${info.overrideFunc}(${JSON.stringify(
+                    jsonParam
+                )})`;
+            } else {
+                return `new ${info.class}(${JSON.stringify(jsonParam)})`;
             }
-            returnInfo += `import { ${info.class} } from "${info.path!}";
-            `
+        };
+        const funcStatements: string[] = [];
+        for (const block of this.blockComponentInstances) {
+            funcStatements.push(
+                `event.blockComponentRegistry.registerCustomComponent("${
+                    block.baseId
+                }_${block.indexId}", ${emitCaller(
+                    block.componentInfo,
+                    block.info
+                )});`
+            );
         }
-        for (const [_id, info] of this.itemComponentInformation) {
-            if (info.path === undefined) {
-                continue;
-            }
-            returnInfo += `import { ${info.class} } from "${info.path!}";
-            `
+        for (const item of this.itemComponentInstances) {
+            funcStatements.push(
+                `event.itemComponentRegistry.registerCustomComponent("${
+                    item.baseId
+                }_${item.indexId}", ${emitCaller(
+                    item.componentInfo,
+                    item.info
+                )});`
+            );
         }
-        return returnInfo;
-    }
+        func.addStatements(funcStatements);
 
+    }
+    
 }

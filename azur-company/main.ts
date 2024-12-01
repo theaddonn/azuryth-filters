@@ -1,92 +1,157 @@
-import { BlockComponent, JsonValue, ComponentStore, Block, ItemComponent, Item, AddonProcessor, getOrThrow, PathInformation, ParserEnabled } from "@azuryth/azuryth-core";
-import { getSettings } from "./core/cli.ts";
+import {
+    BlockComponent,
+    JsonValue,
+    ComponentStore,
+    Block,
+    ItemComponent,
+    Item,
+    AddonProcessor,
+    PathInformation,
+    ParserEnabled,
+} from "@azuryth/azuryth-core";
+import { FilterSettings, getSettings } from "./core/cli.ts";
 import { ComponentGenerator } from "./core/componentGenerator.ts";
-import { ComponentType, gatherComponentInformation } from "./core/config.ts";
-import { ensureDirSync } from "@std/fs/ensure-dir";
-import { ensureFileSync } from "@std/fs/ensure-file";
-let base = getOrThrow<string>("scriptDir", getSettings())!;
-if (!base.endsWith("/")) {
-  base += "/"
-}
-
-console.log("Gathering Components")
-const [offsets, information, mainPath] = gatherComponentInformation();
-console.log(`Found ${information.length} components! ${JSON.stringify(information)}`);
-
-const generator = new ComponentGenerator(information);
+import {
+    ComponentInformation,
+    ComponentRipper,
+    ComponentType,
+} from "./core/componentPuller.ts";
+import { CodeBlockWriter, Project } from "@ts-morph/ts-morph";
 
 class ComponentResolver implements BlockComponent, ItemComponent {
-  private id: string;
-  private isItem: boolean;
-  constructor(id: string, isItem: boolean) {
-    this.id = id;
-    this.isItem = isItem;
-    this.generate = this.generate.bind(this);
-  }
-  generate(_block: Block | Item, info: JsonValue, localJsonContext: ComponentStore<JsonValue>) {
-    const newId = generator.addComponentReference(this.id, info, this.isItem);
-    if (newId === undefined) {
-      return;
+    private id: string;
+    private isItem: boolean;
+    private generator: ComponentGenerator;
+    constructor(id: string, isItem: boolean, gen: ComponentGenerator) {
+        this.id = id;
+        this.isItem = isItem;
+        this.generator = gen;
+        this.generate = this.generate.bind(this);
     }
-    console.log(`Bound ${this.id}`)
-    const componentArray = localJsonContext.getComponentOrDefault<string[]>("minecraft:custom_components", []);
-    componentArray.push(newId);
-    localJsonContext.setComponent("minecraft:custom_components", componentArray);
-  }
+    generate(
+        _block: Block | Item,
+        info: JsonValue,
+        localJsonContext: ComponentStore<JsonValue>
+    ) {
+        const newId = this.generator.addComponentReference(
+            this.id,
+            info,
+            this.isItem
+        );
+        if (newId === undefined) {
+            return;
+        }
+        console.log(`Bound ${this.id}`);
+        const componentArray = localJsonContext.getComponentOrDefault<string[]>(
+            "minecraft:custom_components",
+            []
+        );
+        componentArray.push(newId);
+        localJsonContext.setComponent(
+            "minecraft:custom_components",
+            componentArray
+        );
+    }
 }
 
+function main() {
+    const base = getSettings()!;
+    if (!base.scriptDir.endsWith("/")) {
+        base.scriptDir += "/";
+    }
 
-const addon = new AddonProcessor();
+    const project = new Project({ compilerOptions: { allowJs: true } });
+    const ripper = new ComponentRipper(
+        base.scriptDir + base.globPattern,
+        project
+    );
 
+    const information = ripper.rip(base);
 
-for (const info of information) {
-  const resolver = new ComponentResolver(info.componentId, info.type === ComponentType.Item);
-  if (info.type === ComponentType.Item) {
-    addon.addItemComponent(info.componentId, resolver);
-  } else {
-    addon.addBlockComponent(info.componentId, resolver);
-  }
+    const generator = new ComponentGenerator(information, project);
+
+    const addon = new AddonProcessor();
+
+    bindComponents(addon, generator, information);
+    addRegisterCall(base, project);
+
+    const path = new PathInformation(base.bpDir, "RP");
+
+    addon.parseAddon(path, new ParserEnabled(true, true));
+    addon.processAddon();
+
+    generator.generateSource(base.scriptDir);
+
+    const prommise = project.save();
+
+    addon.saveAddon();
+
+    prommise.catch((err) => console.error(`Failed to save ${err}`));
+}
+main();
+
+function bindComponents(
+    addon: AddonProcessor,
+    generator: ComponentGenerator,
+    information: ComponentInformation[]
+) {
+    for (const info of information) {
+        const resolver = new ComponentResolver(
+            info.componentId,
+            info.type === ComponentType.Item,
+            generator
+        );
+        if (info.type === ComponentType.Item) {
+            addon.addItemComponent(info.componentId, resolver);
+        } else {
+            addon.addBlockComponent(info.componentId, resolver);
+        }
+    }
 }
 
-const path = new PathInformation("BP", "RP");
+function addRegisterCall(filterSettings: FilterSettings, project: Project) {
+    const mainFile = project.getSourceFileOrThrow(
+        filterSettings.scriptDir + filterSettings.mainFileName
+    );
 
-addon.parseAddon(path, new ParserEnabled(true, true));
-addon.processAddon();
-try {
-  ensureDirSync(base)
-} catch (err) {
-  console.error(`Failed to generate scripts dir: ${err}`);
-  Deno.exit(-1);
+    const leading = mainFile.getLeadingCommentRanges();
+    const trailing = mainFile.getTrailingCommentRanges();
+    const writer = (writer: CodeBlockWriter) => {
+        writer
+            .writeLine(
+                `import {registerGeneratedComponentsFromAzurCompany} from '${
+                    "./azur_company_register"
+                }'`
+            )
+            .writeLine(
+                `import { world as AzurCompanyWorldType} from '@minecraft/server'`
+            )
+            .writeLine(
+                `AzurCompanyWorldType.beforeEvents.worldInitialize.subscribe((event) => {registerGeneratedComponentsFromAzurCompany(event)});`
+            );
+    };
+    for (const commentRange of leading) {
+        if (commentRange.getText().includes("// azur_company(emit)")) {
+            mainFile.replaceText(
+                [commentRange.getPos(), commentRange.getEnd()],
+                writer
+            );
+            return;
+        }
+    }
+    for (const commentRange of trailing) {
+        if (commentRange.getText().includes("// azur_company(emit)")) {
+            mainFile.replaceText(
+                [commentRange.getPos(), commentRange.getEnd()],
+                writer
+            );
+            return;
+        }
+    }
+    console.warn("No dedicated emmition specified (add // azur_company(emit) to a line in your main file to tell Azur-Company where to emit)");
+    mainFile.addStatements(writer);
+
+    console.log(mainFile.print())
+
+    
 }
-try {
-  ensureFileSync(base + mainPath)
-} catch(err) {
-  console.error(`Failed to generate main.js: ${err}`);
-  Deno.exit(-1);
-}
-
-let main = Deno.readTextFileSync(base + mainPath)
-
-const needsWorld = main.search(new RegExp("\\{[^}]*\\bworld\\b[^}]*\\}")) == -1;
-
-const registerJS = generator.generateRegisterPass(!offsets, needsWorld);
-let writeRequest;
-if (!offsets) {
-  writeRequest = Deno.writeTextFile(base + "/register.js", registerJS);
-}
-
-
-if (offsets) {
-  main += registerJS
-}
-main += `
-createBinder();
-`
-
-Deno.writeTextFileSync(base + mainPath, main);
-if (writeRequest) {
-  writeRequest.catch((err) => console.error(`Error when writing register.js ${err}`));
-}
-
-
-addon.saveAddon();
