@@ -120,7 +120,6 @@ export class ComponentGenerator {
             `
         }
 
-        console.log(`${returnInfo}`);
         return returnInfo; 
     }
 }
