@@ -8,8 +8,8 @@
             "request": "launch",
             "name": "Launch Program",
             "type": "node",
-            "program": "${workspaceFolder}/azur-company/main.ts",
-            "cwd": "${workspaceFolder}/azur-company/tmp",
+            "program": "${workspaceFolder}/core/test.ts",
+            "cwd": "${workspaceFolder}/core/tmp",
             "env": {},
             "runtimeExecutable": "deno.EXE",
             "runtimeArgs": [
