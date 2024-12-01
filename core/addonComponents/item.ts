@@ -9,7 +9,6 @@ export class Item {
     private description: JsonObject;
     private formatString: string;
     constructor(json: JsonObject) {
-        console.log(JSON.stringify(json))
         const format = getOrThrow<string>("format_version", json)!;
         const item = getOrThrow<JsonObject>("minecraft:item", json)!;
         const description = getOrThrow<JsonObject>("description", item)!;
