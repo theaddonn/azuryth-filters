@@ -54,8 +54,10 @@ export class ComponentGenerator {
     generateRegisterPass(requireComponentImports: boolean): string {
         let mainString = "";
         if (requireComponentImports) {
+            console.log("Building External Imports");
             mainString += this.buildImportsExternal();
         } else {
+            console.log("Building Internal Imports");
             mainString += this.buildImportsInternal();
         }
 
