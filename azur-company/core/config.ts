@@ -27,8 +27,16 @@ export function gatherComponentInformation(): [
     const information = getOrThrow<JsonObject[]>("componentList", rawConfig)!;
     const informationArray = new Array<ComponentInformation>();
     for (const info of information) {
-        // This is kind of spicy
-        informationArray.push(info as unknown as ComponentInformation);
+        const componentClass = getOrThrow<string>("class", info)!;
+        const componentId = getOrThrow<string>("componentId", info)!;
+        const path = getOrUndefined<string>("path", info);
+        const type = getOrThrow<ComponentType>("type", info)!;
+        informationArray.push({
+            class: componentClass,
+            componentId: componentId,
+            path: path,
+            type: type,
+        });
     }
     return [getOrUndefined("heterogeneousJs", rawConfig) as boolean, informationArray, getOrThrow<string>("mainJs", rawConfig)!];
 }
