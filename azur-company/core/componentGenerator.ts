@@ -125,6 +125,8 @@ export class ComponentGenerator {
             returnInfo += `import { ${info.class} } from "./main";
             `
         }
+
+        console.log(`${returnInfo}`);
         return returnInfo; 
     }
 }
