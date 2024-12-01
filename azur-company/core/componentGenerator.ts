@@ -56,9 +56,6 @@ export class ComponentGenerator {
         if (requireComponentImports) {
             console.log("Building External Imports");
             mainString += this.buildImportsExternal();
-        } else {
-            console.log("Building Internal Imports");
-            mainString += this.buildImportsInternal();
         }
 
         mainString += `
@@ -108,18 +105,4 @@ export class ComponentGenerator {
         return returnInfo;
     }
 
-    private buildImportsInternal(): string {
-        let returnInfo = "";
-        
-        for (const [_id, info] of this.blockComponentInformation) {
-            returnInfo += `import { ${info.class} } from "./main";
-            `
-        }
-        for (const [_id, info] of this.itemComponentInformation) {
-            returnInfo += `import { ${info.class} } from "./main";
-            `
-        }
-
-        return returnInfo; 
-    }
 }

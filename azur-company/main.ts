@@ -28,7 +28,7 @@ class ComponentResolver implements BlockComponent, ItemComponent {
     if (newId === undefined) {
       return;
     }
-    console.log(`Bound ${this.id}`);
+    console.log(`Bound ${this.id}`)
     const componentArray = localJsonContext.getComponentOrDefault<string[]>("minecraft:custom_components", []);
     componentArray.push(newId);
     localJsonContext.setComponent("minecraft:custom_components", componentArray);
@@ -68,18 +68,25 @@ try {
 
 
 const registerJS = generator.generateRegisterPass(!offsets);
+let writeRequest;
+if (!offsets) {
+  writeRequest = Deno.writeTextFile(base + "/register.js", registerJS);
+}
 
-
-const writeRequest = Deno.writeTextFile(base + "/register.js", registerJS);
 
 let main = Deno.readTextFileSync(base + mainPath)
+if (offsets) {
+  main += registerJS
+}
 main += `
 import {createBinder} from "./register.js";
 createBinder();
 `
 
 Deno.writeTextFileSync(base + mainPath, main);
-writeRequest.catch((err) => console.error(`Error when writing register.js ${err}`));
+if (writeRequest) {
+  writeRequest.catch((err) => console.error(`Error when writing register.js ${err}`));
+}
 
 
 addon.saveAddon();
