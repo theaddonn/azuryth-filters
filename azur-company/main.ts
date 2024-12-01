@@ -65,16 +65,17 @@ try {
   Deno.exit(-1);
 }
 
+let main = Deno.readTextFileSync(base + mainPath)
 
+const needsWorld = main.search(new RegExp("\\{[^}]*\\bworld\\b[^}]*\\}")) == -1;
 
-const registerJS = generator.generateRegisterPass(!offsets);
+const registerJS = generator.generateRegisterPass(!offsets, needsWorld);
 let writeRequest;
 if (!offsets) {
   writeRequest = Deno.writeTextFile(base + "/register.js", registerJS);
 }
 
 
-let main = Deno.readTextFileSync(base + mainPath)
 if (offsets) {
   main += registerJS
 }

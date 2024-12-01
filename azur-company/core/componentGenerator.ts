@@ -51,15 +51,17 @@ export class ComponentGenerator {
     }
 
 
-    generateRegisterPass(requireComponentImports: boolean): string {
+    generateRegisterPass(requireComponentImports: boolean, needsWorld: boolean): string {
         let mainString = "";
         if (requireComponentImports) {
             console.log("Building External Imports");
             mainString += this.buildImportsExternal();
         }
+        if (needsWorld) {
+            mainString += `import {world} from "@minecraft/server";`;
+        }
 
         mainString += `
-        import {world} from "@minecraft/server";
 
         function bindCustomComponents(event) {
         `;
