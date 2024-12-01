@@ -8,8 +8,8 @@
             "request": "launch",
             "name": "Launch Program",
             "type": "node",
-            "program": "${workspaceFolder}/core/test.ts",
-            "cwd": "${workspaceFolder}/core/tmp",
+            "program": "${workspaceFolder}/azur-company/main.ts",
+            "cwd": "G:\\Projects\\MCBEModding\\Azuryth\\.regolith\\tmp",
             "env": {},
             "runtimeExecutable": "deno.EXE",
             "runtimeArgs": [
