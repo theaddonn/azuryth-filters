@@ -65,14 +65,14 @@ export class ComponentGenerator {
         for (const {id, info, baseId, componentInfo} of this.blockComponentInstances) {
             mainString += `event.blockComponentRegistry.registerCustomComponent(
                 "${baseId}_${id}",
-                new ${componentInfo.class}(${info})
+                new ${componentInfo.class}(${JSON.stringify(info)})
             );
             `
         }
         for (const {id, info, baseId, componentInfo} of this.itemComponentInstances) {
             mainString += `event.itemComponentRegistry.registerCustomComponent(
                 "${baseId}_${id}",
-                new ${componentInfo.class}(${info})
+                new ${componentInfo.class}(${JSON.stringify(info)})
             );
             `
         }

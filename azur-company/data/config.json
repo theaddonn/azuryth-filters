@@ -3,14 +3,14 @@
     "componentList": [
         {
             "class": "Throwable",
-            "componentId": "azur:dynamite",
+            "componentId": "azur:throwable",
             "type": "item"
         }
         /*
             If this wasnt a heterogeneousJs it would look like 
         {
             "class": "Throwable",
-            "componentId": "azur:dynamite",
+            "componentId": "azur:throwable",
             "path": "components/item/throwable.ts",
             "type": "item"
         }

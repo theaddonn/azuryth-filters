@@ -1,8 +1,9 @@
-import { BlockComponent, JsonValue, ComponentStore, Block, ItemComponent, Item, AddonProcessor, getOrThrow } from "@azuryth/azuryth-core";
+import { BlockComponent, JsonValue, ComponentStore, Block, ItemComponent, Item, AddonProcessor, getOrThrow, PathInformation } from "@azuryth/azuryth-core";
 import { getSettings } from "./core/cli.ts";
 import { ComponentGenerator } from "./core/componentGenerator.ts";
 import { ComponentType, gatherComponentInformation } from "./core/config.ts";
-
+import { ensureDirSync } from "@std/fs/ensure-dir";
+import { ensureFileSync } from "@std/fs/ensure-file";
 let base = getOrThrow<string>("scriptDir", getSettings())!;
 if (!base.endsWith("/")) {
   base += "/"
@@ -10,7 +11,7 @@ if (!base.endsWith("/")) {
 
 console.log("Gathering Components")
 const [offsets, information, mainPath] = gatherComponentInformation();
-console.log(`Found ${information.length} components!`);
+console.log(`Found ${information.length} components! ${JSON.stringify(information)}`);
 
 const generator = new ComponentGenerator(information);
 
@@ -46,16 +47,38 @@ for (const info of information) {
   }
 }
 
+const path = new PathInformation("BP", "RP");
+
+addon.parseAddon(path);
 addon.processAddon();
+try {
+  ensureDirSync(base)
+} catch (err) {
+  console.error(`Failed to generate scripts dir: ${err}`);
+  Deno.exit(-1);
+}
+try {
+  ensureFileSync(base + mainPath)
+} catch(err) {
+  console.error(`Failed to generate main.js: ${err}`);
+  Deno.exit(-1);
+}
 
-const registerJS = generator.generateRegisterPass(offsets);
-const writeRequest = Deno.writeTextFile(base + "register.js", registerJS);
 
-let main = Deno.readTextFileSync(base + mainPath);
+
+const registerJS = generator.generateRegisterPass(!offsets);
+
+
+const writeRequest = Deno.writeTextFile(base + "/register.js", registerJS);
+
+let main = Deno.readTextFileSync(base + mainPath)
 main += `
-import {createBinder} from "./register.js;"
+import {createBinder} from "./register.js";
 createBinder();
 `
 
 Deno.writeTextFileSync(base + mainPath, main);
-writeRequest.then(() => {}, () => {});
+writeRequest.catch((err) => console.error(`Error when writing register.js ${err}`));
+
+
+addon.saveAddon();
