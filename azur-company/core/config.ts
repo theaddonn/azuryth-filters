@@ -24,6 +24,8 @@ export function gatherComponentInformation(): [
     const rawConfig: JsonObject = JSON.parse(
         Deno.readTextFileSync("data/azur-company/config.json")
     );
+
+    console.log(`${JSON.stringify(rawConfig)}`)
     const information = getOrThrow<JsonObject[]>("componentList", rawConfig)!;
     const informationArray = new Array<ComponentInformation>();
     for (const info of information) {
@@ -31,6 +33,8 @@ export function gatherComponentInformation(): [
         const componentId = getOrThrow<string>("componentId", info)!;
         const path = getOrUndefined<string>("path", info);
         const type = getOrThrow<ComponentType>("type", info)!;
+        console.log(`Found Component: ${componentId}`)
+
         informationArray.push({
             class: componentClass,
             componentId: componentId,
