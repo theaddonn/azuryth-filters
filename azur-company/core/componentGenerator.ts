@@ -60,11 +60,6 @@ export class ComponentGenerator {
         if (needsWorld) {
             mainString += `import {world} from "@minecraft/server";`;
         }
-
-        mainString += `
-
-        function bindCustomComponents(event) {
-        `;
         for (const {id, info, baseId, componentInfo} of this.blockComponentInstances) {
             mainString += `event.blockComponentRegistry.registerCustomComponent(
                 "${baseId}_${id}",
