@@ -54,6 +54,41 @@ class ComponentResolver implements BlockComponent, ItemComponent {
     }
 }
 
+function fixBlocks(blk: Block, addon: AddonProcessor) {
+    const baseComponents = blk.components.getComponent(
+        "minecraft:custom_components"
+    ) as string[] | undefined;
+    if (!baseComponents) {
+        return;
+    }
+
+    for (const perm of blk.permutations) {
+        const custom = perm.components.getComponent(
+            "minecraft:custom_components"
+        ) as string[] | undefined;
+        if (!custom) {
+            continue;
+        }
+        for (const [id, _] of addon.getBlockComponents()) {
+            for (const baseComponent of baseComponents) {
+                const customAndPerm =
+                    custom.findIndex((val) => {
+                        return (
+                            val.startsWith(id) && baseComponent.startsWith(id)
+                        );
+                    }) > -1;
+                
+                if (!customAndPerm) {
+                    const baseOnly = baseComponent.startsWith(id);
+                    if (baseOnly) {
+                        custom.push(baseComponent);
+                    }
+                }
+            }
+        }
+    }
+}
+
 function main() {
     const base = getSettings()!;
     if (!base.scriptDir.endsWith("/")) {
@@ -79,6 +114,10 @@ function main() {
 
     addon.parseAddon(path, new ParserEnabled(true, true));
     addon.processAddon();
+
+    for (const block of addon.getBlocks()) {
+        fixBlocks(block, addon);
+    }
 
     generator.generateSource(base.scriptDir);
 
@@ -119,9 +158,7 @@ function addRegisterCall(filterSettings: FilterSettings, project: Project) {
     const writer = (writer: CodeBlockWriter) => {
         writer
             .writeLine(
-                `import {registerGeneratedComponentsFromAzurCompany} from '${
-                    "./azur_company_register"
-                }'`
+                `import {registerGeneratedComponentsFromAzurCompany} from '${"./azur_company_register"}'`
             )
             .writeLine(
                 `import { world as AzurCompanyWorldType} from '@minecraft/server'`
@@ -148,9 +185,8 @@ function addRegisterCall(filterSettings: FilterSettings, project: Project) {
             return;
         }
     }
-    console.warn("No dedicated emmition specified (add // azur_company(emit) to a line in your main file to tell Azur-Company where to emit)");
+    console.warn(
+        "No dedicated emmition specified (add // azur_company(emit) to a line in your main file to tell Azur-Company where to emit)"
+    );
     mainFile.addStatements(writer);
-
-
-    
 }
