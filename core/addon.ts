@@ -169,4 +169,11 @@ export class AddonProcessor {
             Deno.writeTextFileSync(path, JSON.stringify(blob));
         }
     }
+
+    getBlocks(): Iterable<Block> {
+        return this.blocks.entries().map(([_, [blk, __]]) => blk);
+    }
+    getItems(): Iterable<Item> {
+        return this.items.entries().map(([_, [item, __]]) => item);
+    }
 }
