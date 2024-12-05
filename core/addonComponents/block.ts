@@ -42,7 +42,7 @@ export class Permutation {
 export class Block {
     components: ComponentStore<JsonValue>;
     traits: ComponentStore<JsonValue>;
-    private permutations: Array<Permutation>;
+    permutations: Array<Permutation>;
     private parsedFormat: string;
     description: JsonValue;
     id: string;
