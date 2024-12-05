@@ -184,4 +184,12 @@ export class AddonProcessor {
     getItemComponent(id: string): ItemComponent | undefined {
         return this.customItemComponents.get(id);
     }
+
+    getBlockComponents(): Iterable<BlockComponent> {
+        return this.customBlockComponents.entries().map(([_, comp]) => comp);
+    }
+    
+    getItemComponents(): Iterable<ItemComponent> {
+        return this.customItemComponents.entries().map(([_, comp]) => comp);
+    }
 }
