@@ -11,12 +11,14 @@ export class ComponentGenerator {
         info: JsonValue;
         baseId: string;
         componentInfo: ComponentInformation;
+        ownerId: string;
     }>;
     private itemComponentInstances: Array<{
         indexId: number;
         info: JsonValue;
         baseId: string;
         componentInfo: ComponentInformation;
+        ownerId: string;
     }>;
     private project: Project;
 
@@ -40,7 +42,8 @@ export class ComponentGenerator {
     addComponentReference(
         id: string,
         info: JsonValue,
-        item: boolean
+        item: boolean,
+        ownerId: string
     ): string | undefined {
         if (item) {
             if (!this.itemComponentInformation.has(id)) {
@@ -58,6 +61,7 @@ export class ComponentGenerator {
                 info: info,
                 baseId: id,
                 componentInfo: customInfo,
+                ownerId: ownerId
             });
         } else {
             const customInfo = this.blockComponentInformation.get(id)!;
@@ -66,6 +70,7 @@ export class ComponentGenerator {
                 info: info,
                 baseId: id,
                 componentInfo: customInfo,
+                ownerId: ownerId
             });
         }
         this.indexId += 1;
@@ -80,10 +85,9 @@ export class ComponentGenerator {
         const func = file.addFunction({
             name: "registerGeneratedComponentsFromAzurCompany",
             parameters: [{ name: "event" }],
-            isExported: true
+            isExported: true,
         });
         this.emitFunctionBody(func);
-
     }
 
     private emitIncludes(file: SourceFile) {
@@ -106,14 +110,21 @@ export class ComponentGenerator {
     private emitFunctionBody(func: FunctionDeclaration) {
         const emitCaller = (
             info: ComponentInformation,
-            jsonParam: JsonValue
+            jsonParam: JsonValue,
+            callerId: string
         ) => {
             if (info.overrideFunc) {
                 return `${info.class}.${info.overrideFunc}(${JSON.stringify(
                     jsonParam
-                )})`;
+                )}` +
+                    (info.passId === true)
+                    ? `, ${callerId})`
+                    : `)`;
             } else {
-                return `new ${info.class}(${JSON.stringify(jsonParam)})`;
+                return `new ${info.class}(${JSON.stringify(jsonParam)}` +
+                    (info.passId === true)
+                    ? `, ${callerId})`
+                    : `)`;
             }
         };
         const funcStatements: string[] = [];
@@ -123,7 +134,8 @@ export class ComponentGenerator {
                     block.baseId
                 }_${block.indexId}", ${emitCaller(
                     block.componentInfo,
-                    block.info
+                    block.info,
+                    block.ownerId
                 )});`
             );
         }
@@ -133,12 +145,11 @@ export class ComponentGenerator {
                     item.baseId
                 }_${item.indexId}", ${emitCaller(
                     item.componentInfo,
-                    item.info
+                    item.info,
+                    item.ownerId
                 )});`
             );
         }
         func.addStatements(funcStatements);
-
     }
-    
 }

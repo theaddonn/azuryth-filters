@@ -3,7 +3,7 @@ import {
     Project,
     SourceFile,
 } from "@ts-morph/ts-morph";
-import { findCloseIndex, searchWithScopes } from "./string.ts";
+import { findCloseIndex, searchWithScopes, stb } from "./string.ts";
 import { FilterSettings } from "./cli.ts";
 export enum ComponentType {
     Block = "block",
@@ -16,18 +16,22 @@ export interface ComponentInformation {
     readonly path: string;
     readonly type: ComponentType;
     readonly overrideFunc?: string;
+    readonly passId: boolean;
 }
 
 export class ComponentConfig {
     readonly id!: string;
     readonly overrideFunc?: string;
     readonly performTypeCheck: boolean = false;
+    readonly passId: boolean = false;
     constructor(args: [string, string][]) {
         for (const [name, val] of args) {
             if (name === "id") {
                 this.id = val;
             } else if (name === "functionOverride") {
                 this.overrideFunc = val;
+            } else if (name === "passId") {
+                this.passId = stb(val);
             }
         }
         if (this.id === undefined) {
@@ -76,7 +80,6 @@ export class ComponentRipper {
             const comments = classDecl.getLeadingCommentRanges();
             let cfg: ComponentConfig | undefined;
             for (const comment of comments) {
-                console.log(comment.getText());
 
                 cfg = this.parseComponentConfiguration(comment);
                 if (cfg) {
@@ -114,7 +117,8 @@ export class ComponentRipper {
                 componentId: cfg.id,
                 path: path,
                 type: componentType,
-                overrideFunc: cfg.overrideFunc
+                overrideFunc: cfg.overrideFunc,
+                passId: cfg.passId
             });
         }
         return out;
@@ -131,7 +135,6 @@ export class ComponentRipper {
         const parseSource = comment
             .getText()
             .substring(getterPosition + "Generate(".length);
-        console.log(parseSource);
 
         const findEnd = (source: string) => {
             const index = findCloseIndex(source, { open: "(", close: ")" });

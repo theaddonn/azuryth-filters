@@ -28,20 +28,21 @@ class ComponentResolver implements BlockComponent, ItemComponent {
         this.generator = gen;
         this.generate = this.generate.bind(this);
     }
+
     generate(
-        _block: Block | Item,
+        object: Block | Item,
         info: JsonValue,
         localJsonContext: ComponentStore<JsonValue>
     ) {
         const newId = this.generator.addComponentReference(
             this.id,
             info,
-            this.isItem
+            this.isItem,
+            object.id
         );
         if (newId === undefined) {
             return;
         }
-        console.log(`Bound ${this.id}`);
         const componentArray = localJsonContext.getComponentOrDefault<string[]>(
             "minecraft:custom_components",
             []
