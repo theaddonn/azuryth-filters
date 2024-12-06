@@ -114,17 +114,22 @@ export class ComponentGenerator {
             callerId: string
         ) => {
             if (info.overrideFunc) {
-                return `${info.class}.${info.overrideFunc}(${JSON.stringify(
+                let base = `${info.class}.${info.overrideFunc}(${JSON.stringify(
                     jsonParam
-                )}` +
-                    (info.passId === true)
-                    ? `, ${callerId})`
-                    : `)`;
+                )}`;
+                if (info.passId) {
+                    base += `, "${callerId}"`;
+                }
+                base += ")";
+                return base;
+                
             } else {
-                return `new ${info.class}(${JSON.stringify(jsonParam)}` +
-                    (info.passId === true)
-                    ? `, ${callerId})`
-                    : `)`;
+                let base = `new ${info.class}(${JSON.stringify(jsonParam)}`;
+                if (info.passId) {
+                    base += `, "${callerId}"`;
+                }
+                base += ")";
+                return base;
             }
         };
         const funcStatements: string[] = [];
